@@ -4,6 +4,7 @@
 #include "math.h"
 #include "score.h"
 #include "racket.h"
+#include "ball.h"
 
 /*Global varibale*/
 const int WIDTH = 800;
@@ -14,6 +15,7 @@ const int RACKET_HEIGHT = 80;
 Score *score = NULL;
 Racket *racket_left = NULL;
 Racket *racket_right = NULL;
+Ball *ball = NULL;
 
 void enable2D(int width, int height) {
     glViewport(0, 0, width, height);
@@ -66,6 +68,9 @@ void draw() {
     drawRect(racket_right->get_position_x(), racket_right->get_position_y(), 
     racket_right->get_width(), racket_right->get_height());
 
+    // Draw Ball 
+    drawCircle(ball->get_position_x(), ball->get_position_y(), ball->get_rayon(), 100);
+
     // swap buffers (has to be done at the end)
     glutSwapBuffers();
 }
@@ -88,10 +93,62 @@ void processSpecialKeys(int key, int x, int y){
     } 
 }
 
+void checkReboud(){
+    // hit left racket
+    if (ball->get_position_x() < racket_left->get_position_x() + RACKET_WIDTH &&
+        ball->get_position_x() > racket_left->get_position_x() &&
+        ball->get_position_y() < racket_left->get_position_y() + RACKET_HEIGHT &&
+        ball->get_position_y() > racket_left->get_position_y())
+    {
+            //maybe use random when it hits ?
+            float dir_y = ((ball->get_position_y() - racket_left->get_position_y())/RACKET_HEIGHT) - 0.5f;
+            ball->update_direction(fabs(ball->get_direction_x()), dir_y);
+    }
+   
+    // hit right racket
+    if (ball->get_position_x() < racket_right->get_position_x() + RACKET_WIDTH &&
+        ball->get_position_x() > racket_right->get_position_x() &&
+        ball->get_position_y() < racket_right->get_position_y() + RACKET_HEIGHT &&
+        ball->get_position_y() > racket_right->get_position_y())
+    {
+            //maybe use random when it hits ?
+            float dir_y = ((ball->get_position_y() - racket_right->get_position_y())/RACKET_HEIGHT) - 0.5f;
+            ball->update_direction(-fabs(ball->get_direction_x()), dir_y);
+    }
+
+    // hit left wall
+    if (ball->get_position_x() < 0) {
+        score->plus_one(false);
+        ball = new Ball(5, WIDTH/2, HEIGHT/2, -1.0f, 0.0f);
+        ball->update_direction(fabs(ball->get_direction_x()), 0);
+    }
+
+    // hit right wall
+    if (ball->get_position_x() > WIDTH) {
+        score->plus_one(true);
+        ball = new Ball(5, WIDTH/2, HEIGHT/2, -1.0f, 0.0f);
+        ball->update_direction(-fabs(ball->get_direction_x()), 0);
+    }
+
+    // hit top wall
+    if (ball->get_direction_y() >= HEIGHT){
+        ball->update_direction(ball->get_direction_x(), -fabs(ball->get_direction_y()));
+    }
+
+    // hit bottom wall
+    if (ball->get_direction_y() < 0){
+        ball->update_direction(ball->get_direction_x(), fabs(ball->get_direction_y()));
+    }
+}
+
+
 void update(int value) {
     // Call update() again in 'interval' milliseconds
     glutTimerFunc(100, update, 0);
     
+    ball->update_position();  
+    checkReboud();  
+
     // Redisplay frame
     glutPostRedisplay();
 }
@@ -104,8 +161,9 @@ int main(int argc, char * argv[]){
 
     //Initialize all items
     score = new Score(WIDTH/2 -10, HEIGHT - 15);
-    racket_left = new Racket(RACKET_WIDTH, RACKET_HEIGHT, 10.0f, HEIGHT/2 - 10.0f);
-    racket_right = new Racket(RACKET_WIDTH, RACKET_HEIGHT, WIDTH - 10.0f, HEIGHT/2 - 10.0f);
+    racket_left = new Racket(RACKET_WIDTH, RACKET_HEIGHT, 10.0f, HEIGHT/2 - 40.0f);
+    racket_right = new Racket(RACKET_WIDTH, RACKET_HEIGHT, WIDTH - 10.0f, HEIGHT/2 - 40.0f);
+    ball = new Ball(5, WIDTH/2, HEIGHT/2, -1.0f, 0.0f);
 
     // Register callback functions  
     glutDisplayFunc(draw);
