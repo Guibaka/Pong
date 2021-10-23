@@ -1,4 +1,4 @@
-objects := main.o score.o
+objects := main.o score.o racket.o
 CXXFLAGS := -std=c++11
 LDLIBS := -lglut -lGL -lGLU -lglut -lm
 
@@ -7,6 +7,8 @@ main: $(objects)
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
 score.o : score.h
+
+racket.o : racket.h
 
 main.o: main.cpp
 
