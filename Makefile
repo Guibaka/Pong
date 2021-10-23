@@ -1,10 +1,12 @@
-objects := main.o
+objects := main.o score.o
 CXXFLAGS := -std=c++11
 LDLIBS := -lglut -lGL -lGLU -lglut -lm
 
 main: CC := $(CXX)
 main: $(objects)
 	$(LINK.o) $^ $(LDLIBS) -o $@
+
+score.o : score.h
 
 main.o: main.cpp
 
